@@ -23,14 +23,14 @@ def n_step_call(S, u, d, K, N):
     # Calculating the option value at t=0 by stepping back through the tree
     values = l
     # Loop to step back through the tree N times
-    for i in range(0,N):
+    for steps in range(0,N):
         newValues = []
         # Loop to calculate the call prices for the previous step
-        for i in range(0,len(values)-1):
-            newValues.append(step_back(p, values[i], values[i+1]))
+        for nodes in range(0,len(values)-1):
+            newValues.append(step_back(p, values[nodes], values[nodes+1]))
 
         values = newValues
 
-    return(values)
+    return(values[0])
 
 print(n_step_call(100, 1.3, 0.9, 100, 3))
