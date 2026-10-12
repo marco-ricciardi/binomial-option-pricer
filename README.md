@@ -5,13 +5,30 @@ A Python option pricer built from scratch with the binomial model, starting from
 As a first-year Financial Mathematics student, I wanted to understand how options are actually priced by building a model myself, not just by learning the formulas. The binomial model was a natural place to start. The first step can be worked out by hand with pen and paper, and each stage adds one new idea on top, so I could check every step as I built it.
 
 ## How it works
-The model assumes that the price of a stock will either go up or down over each time step. After an up move, the price becomes S\*u and after a down move, S\*d. We calculate the risk-neutral probability, where "p" is the probability of an up move that makes the stock grow, on average, at exactly the risk-free rate. Including interest, the formula for "p" is:
+The model assumes that the price of a stock will either go up or down over each time step. After an up move, the price becomes $S \times u$, and after a down move, $S \times d$. We calculate the risk-neutral probability, where $p$ is the probability of an up move that makes the stock grow, on average, at exactly the risk-free rate. Including interest, the formula for $p$ is:
 
 ```math
 p = \frac{1 + r - d}{u - d}
 ```
 
+Where $r$ is the risk-free interest rate per step.
 
+When we reach the final column of the tree, we can calculate what the option is worth if you exercise it, using:
+
+```math
+V = \max(S - K, 0)
+```
+
+Where $S$ is the stock price at the final point and $K$ is the strike price, the price the option lets you buy the stock. Therefore, if the stock price ends below the strike price, the call would simply not be exercised, meaning the value of the final payoff never drops below 0.
+
+Finally, we calculate the fair price of the option today $(t = 0)$ using backward induction. At each point, the option's calculated value is the p-weighted average of the two points after it, divided by $(1 + r)$ to account for interest. 
+We repeat this process column by column, taking in each newly calculated fair price as the input for the next price, until we reach today:
+
+```math
+V = \frac{pV_{\text{up}} + (1-p)V_{\text{down}}}{1 + r}
+```
+
+We divide by $(1 + r)$ because £1 received one step from now is worth less than £1 today.
 
 ## How I built it
 
