@@ -8,8 +8,10 @@ As a first-year Financial Mathematics student, I wanted to understand how option
 The model assumes that the price of a stock will either go up or down over each time step. After an up move, the price becomes S\*u and after a down move, S\*d. We calculate the risk-neutral probability, where "p" is the probability of an up move that makes the stock grow, on average, at exactly the risk-free rate. Including interest, the formula for "p" is:
 
 ```math
-p = \frac{e^{r\Delta t} - d}{u - d}
+p = \frac{1 + r - d}{u - d}
 ```
+
+
 
 ## How I built it
 
