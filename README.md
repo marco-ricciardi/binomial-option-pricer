@@ -47,5 +47,8 @@ Requires Python 3. No extra libraries needed.
 - [x] N-step tree
 - [x] Interest rates
 - [ ] Volatility-based u and d (Cox-Ross-Rubinstein)
-- [ ] Puts and American options
-- [ ] Comparison with Black-Scholes
+- [ ] Puts and put-call parity
+- [ ] American options (early exercise)
+- [ ] Black-Scholes comparison and convergence chart
+- [ ] Implied volatility (bisection and Newton's method)
+- [ ] Delta and hedging
