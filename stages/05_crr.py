@@ -8,12 +8,14 @@ def step_back(p, up, down, growth):
     return((up*p + down*(1-p))/growth)
 
 def n_step_call(S, K, N, r, T, sigma):
-    """Calculates the fair price at t=0 of a European call with continuously compounded interest, where T is the time to maturity in years and r is the annual rate"""
+    """Calculates the fair price at t=0 of a European call with continuously compounded interest and volatility, where T is the time to maturity in years, r is the annual, continuously compounded rate, and sigma is the volatility of the underlying asset, annually, as a decimal"""
 
     # Length of each time step in years
     dt = T/N
 
-    # Calculating the up and down factors based on volatility
+    # Up and down factors from volatility (Cox-Ross-Rubinstein): u = e^(sigma * sqrt(dt)), d = 1/u
+    # Scaling by sqrt(dt) keeps the total variance at T*sigma^2 for any N
+    # d = 1/u means an up move followed by a down move returns the price to S
     u = math.exp(sigma * math.sqrt(dt))
     d = 1/u
 
@@ -49,5 +51,5 @@ def n_step_call(S, K, N, r, T, sigma):
 
     return(values[0])
 
-
-print(n_step_call(100, 100, 1, 0.05, 1, 0.2))
+# Test
+print(f"Call Price: {n_step_call(100, 100, 100, 0.05, 1, 0.2):.4f}")
