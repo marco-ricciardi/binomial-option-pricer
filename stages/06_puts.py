@@ -80,6 +80,22 @@ def n_step_put(S, K, N, r, T, sigma):
 
     return(values[0])
 
+# Declare test values
+S = 100
+K = 100
+N = 1
+r = 0.05
+T = 1
+sigma = 0.2
+
 # Test
-print(f"Call Price: {n_step_call(100, 100, 100, 0.05, 1, 0.2):.4f}")
-print(f"Put Price: {n_step_call(100, 100, 1, 0.05, 1, 0.2):.4f}")
+call_price = n_step_call(S, K, N, r, T, sigma)
+put_price = n_step_put(S, K, N, r, T, sigma)
+
+# Printing the prices
+print(f"Call Price: {call_price:.4f}")
+print(f"Put Price: {put_price:.4f}")
+
+# Parity check: making sure that the difference in put and call prices is the same as the difference between the stock's initial price and the strike price multiplied by the growth factor
+print(f"C - P = {(call_price - put_price):.4f}")
+print(f"S - Ke^(-rT) = {(S - K * math.exp(-r * T)):.4f}")
