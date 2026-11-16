@@ -39,6 +39,15 @@ V = \max(S_T - K, 0)
 <br>
 
 Where $S_T$ is the stock price at the final point and $K$ is the strike price, the price at which the option lets you buy the stock. Therefore, if the stock price ends below the strike price, the call would simply not be exercised, meaning the value of the final payoff never drops below 0.
+
+A put is the opposite: it lets you sell the stock at $K$, so it pays off when the price falls:
+
+```math
+V = \max(K - S_T, 0)
+```
+<br>
+
+Only the payoff changes. Everything else in the tree ($u$, $d$, $p$ and the stepping back) stays exactly the same.
  
 Finally, we calculate the fair price of the option today $(t = 0)$ using backward induction. At each point, the option's calculated value is the p-weighted average of the two points after it, divided by $e^{r\Delta t}$ to account for interest.
 
@@ -50,6 +59,42 @@ V = \frac{pV_{\text{up}} + (1-p)V_{\text{down}}}{e^{r\Delta t}}
 <br>
 
 We divide by $e^{r\Delta t}$ because £1 received one step from now is worth less than £1 today.
+
+### Put-call parity
+A European call and put with the same $S$, $K$, $r$ and $T$ must satisfy:
+
+```math
+C - P = S - Ke^{-rT}
+```
+<br>
+
+Owning a call and selling a put means that at maturity you buy the stock for $K$ whatever happens: if the price is above $K$ you use your call, and if it's below $K$ the put buyer makes you buy. That's worth the stock today minus $K$ discounted back to today. The code uses this as a free check: if $C$ and $P$ don't satisfy it, one of them is wrong.
+
+### American options (early exercise)
+A European option can only be exercised at maturity, but an American option can be exercised at any step. At every point in the tree the holder chooses between:
+
+- **Keeping it**, worth the continuation value: the discounted, p-weighted average from backward induction.
+- **Exercising it now**, worth the exercise value: the payoff using the stock price at that point.
+
+They pick whichever is bigger:
+
+```math
+V = \max(\text{continuation value},\ \text{exercise value})
+```
+<br>
+
+To get the exercise value, we need the stock price at each point while stepping back. At step $n$, the point $i$ places from the top has had $n - i$ up moves and $i$ down moves, so its price is $S \times u^{n-i} \times d^{i}$.
+
+For a put, early exercise can be worth it: if the stock has crashed, you'd rather have $K$ now and earn interest on it than wait. So the American put is worth at least as much as the European one. For a call on a stock that pays no dividends, exercising early is never worth it (you'd pay $K$ sooner and lose the protection if the price falls), so the American call equals the European call.
+
+Because of this, put-call parity no longer holds exactly for American options. It becomes a range:
+
+```math
+S - K \le C - P \le S - Ke^{-rT}
+```
+<br>
+
+The gap between $S - Ke^{-rT}$ and $C - P$ is exactly the put's early-exercise premium.
  
 ## How I built it
 1. [One-step tree](stages/01_one_step.py): priced a call with a single up/down move, using the risk-neutral probability.
@@ -57,11 +102,13 @@ We divide by $e^{r\Delta t}$ because £1 received one step from now is worth les
 3. [N-step tree](stages/03_n_step.py): scaled up to an n-step tree, using loops to build the tree and step back through it for any number of steps.
 4. [Interest rates](stages/04_interest_rates.py): added a continuously compounded annual rate $r$ over time to maturity $T$, which changes $p$ and discounts each step back by $e^{r\Delta t}$, plus a no-arbitrage check.
 5. [Cox-Ross-Rubinstein](stages/05_crr.py): replaced manually assigned $u$ and $d$ with ones calculated from volatility, so the option price converges towards the Black-Scholes price as $N$ grows.
+6. [Puts and put-call parity](stages/06_puts.py): added European puts by changing only the payoff, merged calls and puts into one function, and checked them against each other with put-call parity.
+7. [American options](stages/07_american.py): added early exercise by comparing the continuation value with the exercise value at every point, and checked that the American call equals the European call. At $N = 100$ the American put is worth 6.0824 against 5.5536 for the European put, an early-exercise premium of 0.5288.
 
 ## How to run it
 Requires Python 3. No extra libraries needed.
  
-    python stages/05_crr.py
+    python stages/07_american.py
  
 ## Roadmap
 - [x] One-step tree
@@ -69,8 +116,8 @@ Requires Python 3. No extra libraries needed.
 - [x] N-step tree
 - [x] Interest rates
 - [x] Volatility-based u and d (Cox-Ross-Rubinstein)
-- [ ] Puts and put-call parity
-- [ ] American options (early exercise)
+- [x] Puts and put-call parity
+- [x] American options (early exercise)
 - [ ] Black-Scholes comparison and convergence chart
 - [ ] Implied volatility (bisection and Newton's method)
 - [ ] Delta and hedging
