@@ -1,5 +1,7 @@
 # Binomial Option Pricer
 A Python option pricer built from scratch with the binomial model, starting from a one-step tree and adding one concept per stage. *(Work in progress.)*
+
+![The binomial call price zig-zagging towards the Black-Scholes price as the number of steps grows](images/convergence.png)
  
 ## Why I built this
 As a first-year Financial Mathematics student, I wanted to understand how options are actually priced by building a model myself, not just by learning the formulas.
@@ -95,6 +97,22 @@ S - K \le C - P \le S - Ke^{-rT}
 <br>
 
 The gap between $S - Ke^{-rT}$ and $C - P$ is exactly the put's early-exercise premium.
+
+### Black-Scholes comparison
+As $N$ gets very large, the tree turns into the Black-Scholes model, which prices a European option with one formula and no tree:
+
+```math
+d_1 = \frac{\ln(S/K) + \left(r + \tfrac{1}{2}\sigma^2\right)T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}
+```
+
+```math
+C = S\,N(d_1) - Ke^{-rT}N(d_2), \qquad P = Ke^{-rT}N(-d_2) - S\,N(-d_1)
+```
+<br>
+
+Where $N(x)$ is the probability that a standard normal random number is below $x$. The code works this out with Python's error function, `math.erf`, so it needs no extra libraries. Roughly, $N(d_2)$ is the risk-neutral probability that the call ends up being exercised, so the call price is the value of the stock you receive minus the discounted strike you pay, each weighted by the chance it happens.
+
+Because Black-Scholes gives the exact price the tree is heading towards, it's the perfect check: if the tree is right, the gap between the two should shrink towards 0 as $N$ grows.
  
 ## How I built it
 1. [One-step tree](stages/01_one_step.py): priced a call with a single up/down move, using the risk-neutral probability.
@@ -104,11 +122,34 @@ The gap between $S - Ke^{-rT}$ and $C - P$ is exactly the put's early-exercise p
 5. [Cox-Ross-Rubinstein](stages/05_crr.py): replaced manually assigned $u$ and $d$ with ones calculated from volatility, so the option price converges towards the Black-Scholes price as $N$ grows.
 6. [Puts and put-call parity](stages/06_puts.py): added European puts by changing only the payoff, merged calls and puts into one function, and checked them against each other with put-call parity.
 7. [American options](stages/07_american.py): added early exercise by comparing the continuation value with the exercise value at every point, and checked that the American call equals the European call. At $N = 100$ the American put is worth 6.0824 against 5.5536 for the European put, an early-exercise premium of 0.5288.
+8. [Black-Scholes comparison](stages/08_black_scholes.py): added the Black-Scholes formula for calls and puts, then compared it with the tree for increasing $N$ and plotted the convergence chart above.
+
+## Results
+For a call with $S = K = 100$, $r = 0.05$, $T = 1$ and $\sigma = 0.2$, the Black-Scholes price is 10.4506. The tree gets closer as $N$ grows:
+
+| $N$ | Tree price | Gap from Black-Scholes |
+|---|---|---|
+| 1 | 12.1623 | +1.7117 |
+| 2 | 9.5405 | −0.9101 |
+| 5 | 10.8059 | +0.3554 |
+| 10 | 10.2534 | −0.1972 |
+| 50 | 10.4107 | −0.0399 |
+| 100 | 10.4306 | −0.0200 |
+| 101 | 10.4680 | +0.0174 |
+| 500 | 10.4466 | −0.0040 |
+| 1000 | 10.4486 | −0.0020 |
+
+Two things stand out:
+
+- **The price zig-zags towards the answer.** Odd $N$ are slightly too high and even $N$ slightly too low. With $S = K$, an even number of steps puts one final stock price exactly on the strike, while an odd number puts the strike between two final prices, so the payoff $\max(S_T - K, 0)$ is approximated differently and the error flips sign.
+- **The error shrinks roughly in proportion to $1/N$.** Going from $N = 100$ to $N = 1000$ makes the gap about 10 times smaller (from 0.0200 to 0.0020).
 
 ## How to run it
-Requires Python 3. No extra libraries needed.
+Requires Python 3. Stages 1–7 need no extra libraries. Stage 8 uses matplotlib for the convergence chart.
+
+Run from the repository root so the chart saves to `images/`:
  
-    python stages/07_american.py
+    python stages/08_black_scholes.py
  
 ## Roadmap
 - [x] One-step tree
@@ -118,6 +159,6 @@ Requires Python 3. No extra libraries needed.
 - [x] Volatility-based u and d (Cox-Ross-Rubinstein)
 - [x] Puts and put-call parity
 - [x] American options (early exercise)
-- [ ] Black-Scholes comparison and convergence chart
+- [x] Black-Scholes comparison and convergence chart
 - [ ] Implied volatility (bisection and Newton's method)
 - [ ] Delta and hedging
